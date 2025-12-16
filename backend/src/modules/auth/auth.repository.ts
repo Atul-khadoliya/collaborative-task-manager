@@ -1,28 +1,19 @@
-// NOTE: Prisma client will be added later.
-// For now, we define the repository interface shape.
+import { PrismaClient } from "@prisma/client";
 
-export interface CreateUserInput {
+const prisma = new PrismaClient();
+
+export const createUser = async (data: {
   name: string;
   email: string;
   password: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-}
-
-// These are placeholders.
-// Actual DB implementation will be wired once Prisma is set up.
-
-export const createUser = async (data: CreateUserInput): Promise<User> => {
-  throw new Error("createUser not implemented");
+}) => {
+  return prisma.user.create({
+    data,
+  });
 };
 
-export const findUserByEmail = async (
-  email: string
-): Promise<User | null> => {
-  throw new Error("findUserByEmail not implemented");
+export const findUserByEmail = async (email: string) => {
+  return prisma.user.findUnique({
+    where: { email },
+  });
 };
