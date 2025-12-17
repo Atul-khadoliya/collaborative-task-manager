@@ -1,5 +1,7 @@
 import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
 import * as taskRepo from "./task.repository";
+import { io } from "../../server";
+
 
 export const createTask = async (
   input: unknown,
@@ -9,15 +11,25 @@ export const createTask = async (
   const data = CreateTaskDto.parse(input);
 
   // 2. Create task
-  return taskRepo.createTask({
-    title: data.title,
-    description: data.description,
-    dueDate: new Date(data.dueDate),
-    priority: data.priority,
-    status: data.status,
-    creatorId,
-    assignedToId: data.assignedToId,
-  });
+  const task = await taskRepo.createTask({
+  title: data.title,
+  description: data.description,
+  dueDate: new Date(data.dueDate),
+  priority: data.priority,
+  status: data.status,
+  creatorId,
+  assignedToId: data.assignedToId,
+});
+
+// 🔔 Notify assignee on creation
+io.emit("task:assigned", {
+  taskId: task.id,
+  assignedToId: task.assignedToId,
+  title: task.title,
+});
+
+return task;
+
 };
 
 
@@ -49,7 +61,21 @@ export const updateTask = async (
   if (data.status) updatePayload.status = data.status;
   if (data.assignedToId) updatePayload.assignedToId = data.assignedToId;
 
-  return taskRepo.updateTask(taskId, updatePayload);
+ const updatedTask = await taskRepo.updateTask(taskId, updatePayload);
+
+// 🔔 Emit real-time update
+io.emit("task:updated", updatedTask);
+
+// 🔔 Notify assignee if assignment changed
+if (updatePayload.assignedToId) {
+  io.emit("task:assigned", {
+    taskId: updatedTask.id,
+    assignedToId: updatedTask.assignedToId,
+    title: updatedTask.title,
+  });
+}
+
+return updatedTask;
 };
 
 export const deleteTask = async (taskId: string) => {
