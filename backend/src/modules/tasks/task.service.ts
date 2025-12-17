@@ -55,3 +55,17 @@ export const updateTask = async (
 export const deleteTask = async (taskId: string) => {
   return taskRepo.deleteTask(taskId);
 };
+
+export const getMyTasksWithFilters = async (
+  userId: string,
+  filters: {
+    status?: string;
+    priority?: string;
+  }
+) => {
+  return taskRepo.getTasksWithFilters({
+    userId,
+    status: filters.status as any,
+    priority: filters.priority as any,
+  });
+};

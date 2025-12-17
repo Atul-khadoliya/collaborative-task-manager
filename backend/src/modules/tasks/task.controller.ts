@@ -16,12 +16,29 @@ export const createTask = async (req: Request, res: Response) => {
 export const getMyTasks = async (req: Request, res: Response) => {
   try {
     const userId = req.headers["x-user-id"] as string;
-    const tasks = await taskService.getMyTasks(userId);
+
+    const status =
+      typeof req.query.status === "string"
+        ? req.query.status.trim()
+        : undefined;
+
+    const priority =
+      typeof req.query.priority === "string"
+        ? req.query.priority.trim()
+        : undefined;
+
+    const tasks = await taskService.getMyTasksWithFilters(userId, {
+      status: status || undefined,
+      priority: priority || undefined,
+    });
+
     res.status(200).json(tasks);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 export const updateTask = async (req: Request, res: Response) => {
   try {

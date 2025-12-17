@@ -52,3 +52,25 @@ export const deleteTask = async (taskId: string) => {
     where: { id: taskId },
   });
 };
+
+export const getTasksWithFilters = async (params: {
+  userId: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+}) => {
+  const { userId, status, priority } = params;
+
+  return prisma.task.findMany({
+    where: {
+      OR: [
+        { creatorId: userId },
+        { assignedToId: userId },
+      ],
+      ...(status && { status }),
+      ...(priority && { priority }),
+    },
+    orderBy: {
+      dueDate: "asc",
+    },
+  });
+};
