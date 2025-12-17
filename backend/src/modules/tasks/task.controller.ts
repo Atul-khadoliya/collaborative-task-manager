@@ -4,9 +4,10 @@ import * as taskService from "./task.service";
 export const createTask = async (req: Request, res: Response) => {
   try {
     // NOTE: creatorId will come from auth middleware later
-    const creatorId = req.headers["x-user-id"] as string;
+    const userId = (req as any).userId as string;
 
-    const task = await taskService.createTask(req.body, creatorId);
+
+    const task = await taskService.createTask(req.body, userId);
     res.status(201).json(task);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -15,7 +16,8 @@ export const createTask = async (req: Request, res: Response) => {
 
 export const getMyTasks = async (req: Request, res: Response) => {
   try {
-    const userId = req.headers["x-user-id"] as string;
+    const userId = (req as any).userId as string;
+
 
     const status =
       typeof req.query.status === "string"
