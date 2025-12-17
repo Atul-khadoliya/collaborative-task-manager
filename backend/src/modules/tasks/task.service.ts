@@ -1,6 +1,7 @@
 import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
 import * as taskRepo from "./task.repository";
 import { io } from "../../server";
+import * as notificationService from "../notifications/notification.service";
 
 
 export const createTask = async (
@@ -20,6 +21,13 @@ export const createTask = async (
   creatorId,
   assignedToId: data.assignedToId,
 });
+
+// 🔔 Persist notification
+  await notificationService.notifyTaskAssigned({
+    userId: task.assignedToId,
+    taskId: task.id,
+    taskTitle: task.title,
+  });
 
 // 🔔 Notify assignee on creation
 io.emit("task:assigned", {
@@ -68,6 +76,13 @@ io.emit("task:updated", updatedTask);
 
 // 🔔 Notify assignee if assignment changed
 if (updatePayload.assignedToId) {
+
+  await notificationService.notifyTaskAssigned({
+    userId: updatedTask.assignedToId,
+    taskId: updatedTask.id,
+    taskTitle: updatedTask.title,
+  });
+  
   io.emit("task:assigned", {
     taskId: updatedTask.id,
     assignedToId: updatedTask.assignedToId,
