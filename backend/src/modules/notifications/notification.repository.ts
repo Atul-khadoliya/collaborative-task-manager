@@ -1,11 +1,10 @@
-import { PrismaClient, NotificationType } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 
-const prisma = new PrismaClient();
 
 export const createNotification = async (data: {
   userId: string;
   taskId: string;
-  type: NotificationType;
+  type: "TASK_ASSIGNED";
   message: string;
 }) => {
   return prisma.notification.create({

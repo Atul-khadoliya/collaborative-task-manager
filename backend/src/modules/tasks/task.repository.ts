@@ -1,6 +1,7 @@
-import { PrismaClient, TaskPriority, TaskStatus } from "@prisma/client";
+import {TaskPriority, TaskStatus } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 
-const prisma = new PrismaClient();
+
 
 export const createTask = async (data: {
   title: string;
