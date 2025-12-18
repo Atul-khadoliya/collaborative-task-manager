@@ -1,7 +1,11 @@
 import app from "./app";
 import http from "http";
 import { Server } from "socket.io";
+import { verifyToken } from "./utils/jwt";
+
 import "dotenv/config";
+const userSocketMap = new Map<string, string>();
+
 const PORT = process.env.PORT || 5000;
 console.log("DATABASE_URL =", process.env.DATABASE_URL);
 
@@ -17,11 +21,29 @@ const io = new Server(server, {
 
 // Basic connection check
 io.on("connection", (socket) => {
-  console.log("Socket connected:", socket.id);
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) {
+      console.log("❌ Socket connection without token");
+      socket.disconnect();
+      return;
+    }
 
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected:", socket.id);
-  });
+    const payload = verifyToken(token); // must return { userId: string }
+    const userId = payload.userId;
+
+    userSocketMap.set(userId, socket.id);
+
+    console.log(`🔌 User ${userId} connected with socket ${socket.id}`);
+
+    socket.on("disconnect", () => {
+      userSocketMap.delete(userId);
+      console.log(`❌ User ${userId} disconnected`);
+    });
+  } catch (err) {
+    console.log("❌ Invalid socket token");
+    socket.disconnect();
+  }
 });
 
 // Start server
@@ -30,4 +52,18 @@ server.listen(PORT, () => {
 });
 
 // Export io for later use
-export { io };
+export const emitToUser = (
+  userId: string,
+  event: string,
+  payload: any
+) => {
+  const socketId = userSocketMap.get(userId);
+
+  if (!socketId) {
+    // User is offline — silently ignore
+    return;
+  }
+
+  io.to(socketId).emit(event, payload);
+};
+
