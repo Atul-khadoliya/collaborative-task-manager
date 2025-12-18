@@ -45,7 +45,8 @@ export const getMyTasks = async (req: Request, res: Response) => {
 export const updateTask = async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
-    const task = await taskService.updateTask(taskId, req.body);
+    const userId = (req as any).userId ;
+    const task = await taskService.updateTask(taskId, req.body,userId);
     res.status(200).json(task);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
