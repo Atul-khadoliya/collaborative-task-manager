@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { connectSocket, disconnectSocket } from "../lib/socket";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -11,19 +12,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Bootstrap on refresh
   useEffect(() => {
     const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
+    if (token) {
+      setIsAuthenticated(true);
+      connectSocket(token);
+    }
   }, []);
 
   const login = (token: string) => {
     localStorage.setItem("token", token);
     setIsAuthenticated(true);
+    connectSocket(token);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
+    disconnectSocket();
   };
 
   return (

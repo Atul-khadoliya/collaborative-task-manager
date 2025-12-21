@@ -50,7 +50,7 @@ export const updateTask = async (req: Request, res: Response) => {
     res.status(200).json(task);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
-  }
+  } 
 };
 
 export const deleteTask = async (req: Request, res: Response) => {

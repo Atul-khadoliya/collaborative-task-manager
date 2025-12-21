@@ -1,6 +1,7 @@
 import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
 import * as taskRepo from "./task.repository";
-import { io } from "../../server";
+import { emitToUser } from "../../server";
+
 import * as notificationService from "../notifications/notification.service";
 
 
@@ -30,9 +31,8 @@ export const createTask = async (
   });
 
 // 🔔 Notify assignee on creation
-io.emit("task:assigned", {
+emitToUser(task.assignedToId, "task:assigned", {
   taskId: task.id,
-  assignedToId: task.assignedToId,
   title: task.title,
 });
 
@@ -49,10 +49,15 @@ export const getMyTasks = async (userId: string) => {
 
 export const updateTask = async (
   taskId: string,
-  input: unknown
+  input: unknown,
+  actorId: string
 ) => {
   const data = UpdateTaskDto.parse(input);
 
+  const existingTask = await taskRepo.getTaskById(taskId);
+  if (!existingTask) {
+  throw new Error("Task not found");
+}
   const updatePayload: {
     title?: string;
     description?: string;
@@ -72,23 +77,45 @@ export const updateTask = async (
  const updatedTask = await taskRepo.updateTask(taskId, updatePayload);
 
 // 🔔 Emit real-time update
-io.emit("task:updated", updatedTask);
+// 🔔 Decide who should be notified (actor never gets notified)
+const creatorId = existingTask.creatorId;
+const assigneeId = updatedTask.assignedToId;
 
-// 🔔 Notify assignee if assignment changed
-if (updatePayload.assignedToId) {
+// Helper: who is the "other" user
+const notifyUserId =
+  actorId === creatorId ? assigneeId : creatorId;
 
+// ---- CASE 1: Status changed ----
+if (
+  data.status &&
+  data.status !== existingTask.status &&
+  notifyUserId !== actorId
+) {
+  emitToUser(notifyUserId, "task:updated", {
+    taskId: updatedTask.id,
+    status: updatedTask.status,
+    title: updatedTask.title,
+  });
+}
+
+// ---- CASE 2: Assignment changed ----
+if (
+  data.assignedToId &&
+  data.assignedToId !== existingTask.assignedToId
+) {
   await notificationService.notifyTaskAssigned({
     userId: updatedTask.assignedToId,
     taskId: updatedTask.id,
     taskTitle: updatedTask.title,
   });
-  
-  io.emit("task:assigned", {
+
+  emitToUser(updatedTask.assignedToId, "task:assigned", {
     taskId: updatedTask.id,
-    assignedToId: updatedTask.assignedToId,
     title: updatedTask.title,
   });
 }
+
+
 
 return updatedTask;
 };

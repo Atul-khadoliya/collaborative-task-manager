@@ -15,9 +15,13 @@ export interface Task {
   createdAt: string;
 }
 
+// -------------------- QUERIES --------------------
+
 export const getTasks = async (): Promise<Task[]> => {
   return apiClient<Task[]>("/tasks");
 };
+
+// -------------------- MUTATIONS --------------------
 
 export interface CreateTaskInput {
   title: string;
@@ -25,7 +29,7 @@ export interface CreateTaskInput {
   dueDate: string;
   priority: TaskPriority;
   assignedToId: string;
-  status? : string ;
+  status?: TaskStatus;
 }
 
 export const createTask = async (
@@ -33,6 +37,17 @@ export const createTask = async (
 ): Promise<void> => {
   return apiClient<void>("/tasks", {
     method: "POST",
+    body: JSON.stringify(input),
+  });
+};
+
+// 🔴 THIS WAS MISSING — ADD IT
+export const updateTask = async (
+  taskId: string,
+  input: Partial<Pick<Task, "status" | "priority" | "assignedToId">>
+): Promise<void> => {
+  return apiClient<void>(`/tasks/${taskId}`, {
+    method: "PUT",
     body: JSON.stringify(input),
   });
 };

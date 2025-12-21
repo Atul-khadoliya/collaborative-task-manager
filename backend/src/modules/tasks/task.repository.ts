@@ -75,3 +75,6 @@ export const getTasksWithFilters = async (params: {
     },
   });
 };
+export const getTaskById = (taskId: string) => {
+  return prisma.task.findUnique({ where: { id: taskId } });
+};
