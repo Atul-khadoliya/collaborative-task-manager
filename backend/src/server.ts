@@ -12,6 +12,10 @@ console.log("DATABASE_URL =", process.env.DATABASE_URL);
 // Create HTTP server
 const server = http.createServer(app);
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
