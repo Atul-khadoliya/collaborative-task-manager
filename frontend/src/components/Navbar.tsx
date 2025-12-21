@@ -115,20 +115,6 @@ function Navbar() {
                   </div>
                   */}
                 </div>
-
-                <div className="px-4 py-3 border-t border-zinc-100">
-                  <Link
-                    to="/notifications"
-                    className="
-                      text-sm font-medium
-                      text-indigo-600
-                      hover:text-indigo-500
-                      transition
-                    "
-                  >
-                    View all notifications →
-                  </Link>
-                </div>
               </div>
             )}
           </div>

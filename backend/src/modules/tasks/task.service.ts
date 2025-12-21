@@ -23,18 +23,20 @@ export const createTask = async (
   assignedToId: data.assignedToId,
 });
 
-// 🔔 Persist notification
+// 🔔 Notify assignee ONLY if creator != assignee
+if (creatorId !== task.assignedToId) {
   await notificationService.notifyTaskAssigned({
     userId: task.assignedToId,
     taskId: task.id,
     taskTitle: task.title,
   });
 
-// 🔔 Notify assignee on creation
-emitToUser(task.assignedToId, "task:assigned", {
-  taskId: task.id,
-  title: task.title,
-});
+  emitToUser(task.assignedToId, "task:assigned", {
+    taskId: task.id,
+    title: task.title,
+  });
+}
+
 
 return task;
 
