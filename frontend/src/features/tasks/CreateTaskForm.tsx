@@ -5,9 +5,9 @@ import { getUserIdFromToken } from "../../lib/jwt";
 
 /* 🔧 TEMP TEST USERS */
 const TEST_USERS = [
-  { id: "11111111-1111-1111-1111-111111111111", name: "Alice (Test)" },
-  { id: "22222222-2222-2222-2222-222222222222", name: "Bob (Test)" },
-  { id: "33333333-3333-3333-3333-333333333333", name: "Charlie (Test)" },
+  { id: "b638c3dd-c885-4814-96b0-f561344eee38", name: "Alice (Test)" },
+  { id: "cfa75c7b-ef24-4042-9657-5c1b01dd982d", name: "Bob (Test)" },
+  { id: "431e33af-22de-4794-8be6-9e1d7142d3ad", name: "Charlie (Test)" },
 ];
 
 function CreateTaskForm() {
