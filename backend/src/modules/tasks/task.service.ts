@@ -9,6 +9,9 @@ export const createTask = async (
   input: unknown,
   creatorId: string
 ) => {
+  console.log("CREATE TASK CALLED");
+  console.log("CREATOR ID:", creatorId);
+  console.log("RAW INPUT:", input);
   // 1. Validate input
   const data = CreateTaskDto.parse(input);
 
