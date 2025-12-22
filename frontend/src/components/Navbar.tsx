@@ -5,7 +5,12 @@ import { useState, useRef, useEffect } from "react";
 
 function Navbar() {
   const { isAuthenticated, logout } = useAuth();
-  const { unreadCount } = useNotifications();
+  const {
+    unreadCount,
+    notifications,
+    markAllAsRead,
+  } = useNotifications();
+
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
@@ -19,13 +24,26 @@ function Navbar() {
   // Close on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleBellClick = async () => {
+    setOpen((prev) => !prev);
+
+    // ✅ mark read ONLY when opening
+    if (!open && unreadCount > 0) {
+      await markAllAsRead();
+    }
+  };
 
   return (
     <nav
@@ -43,7 +61,7 @@ function Navbar() {
         {isAuthenticated && (
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setOpen((v) => !v)}
+              onClick={handleBellClick}
               className="
                 relative
                 w-9 h-9
@@ -93,27 +111,29 @@ function Navbar() {
                 </div>
 
                 <div className="max-h-80 overflow-y-auto">
-                  {/* Empty state */}
-                  <div className="px-4 py-6 text-sm text-zinc-500 text-center">
-                    No new notifications
-                  </div>
-
-                  {/* Example item (replace later) */}
-                  {/* 
-                  <div className="
-                    px-4 py-3
-                    hover:bg-zinc-50
-                    transition
-                    cursor-pointer
-                  ">
-                    <p className="text-sm text-zinc-800">
-                      Task <span className="font-medium">Design Review</span> was updated
-                    </p>
-                    <p className="text-xs text-zinc-400 mt-1">
-                      2 minutes ago
-                    </p>
-                  </div>
-                  */}
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-sm text-zinc-500 text-center">
+                      No notifications
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`
+                          px-4 py-3
+                          border-b border-zinc-100
+                          ${!n.read ? "bg-indigo-50" : "bg-white"}
+                        `}
+                      >
+                        <p className="text-sm text-zinc-800">
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
