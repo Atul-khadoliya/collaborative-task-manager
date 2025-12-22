@@ -4,7 +4,7 @@ interface LoginResponse {
   token: string;
 }
 
-export const login = async (
+export const loginapi = async (
   email: string,
   password: string
 ): Promise<LoginResponse> => {
