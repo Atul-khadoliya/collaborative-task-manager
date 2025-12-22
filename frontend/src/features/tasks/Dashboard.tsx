@@ -49,7 +49,7 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const userId = getUserIdFromToken();
 
-  /* 🔍 VIEW / FILTER / SORT STATE */
+  /* 🔍 VIEW / FILTER / SORT */
   const [view, setView] = useState<ViewMode>("ASSIGNED");
   const [statusFilter, setStatusFilter] =
     useState<"ALL" | Task["status"]>("ALL");
@@ -64,7 +64,7 @@ function Dashboard() {
     password: string;
   } | null>(null);
 
-  /* 🔑 CONTROLLED INPUT */
+  /* 🔑 ASSIGNEE INPUT STATE */
   const [assigneeInput, setAssigneeInput] = useState<
     Record<string, string>
   >({});
@@ -99,7 +99,7 @@ function Dashboard() {
       </div>
     );
 
-  /* 🔎 APPLY VIEW + FILTERS + SORT */
+  /* 🔎 VIEW + FILTER + SORT */
   const filteredTasks = data
     ?.filter((task) => {
       if (!userId) return false;
@@ -140,6 +140,18 @@ function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
       <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
+
+      {/* ⚠️ DEMO WARNING BANNER */}
+      {assignWarning && (
+        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm">
+          <strong>Demo user assigned.</strong>
+          <div className="mt-1 font-mono">
+            📧 {assignWarning.email}
+            <br />
+            🔑 {assignWarning.password}
+          </div>
+        </div>
+      )}
 
       {/* 🔀 VIEW TABS */}
       <div className="mb-4 flex gap-2">
@@ -202,18 +214,13 @@ function Dashboard() {
         </select>
       </div>
 
-      {/* ⚠️ DEMO WARNING */}
-      {assignWarning && (
-        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm">
-          <strong>Demo user assigned.</strong>
-          <div className="mt-1 font-mono">
-            📧 {assignWarning.email} <br />
-            🔑 {assignWarning.password}
-          </div>
-        </div>
-      )}
-
-      <CreateTaskForm />
+      {/* ✅ CREATE TASK (CONNECTED TO WARNING) */}
+      <CreateTaskForm
+        onAssignedToTestUser={(email, password) => {
+          setAssignWarning({ email, password });
+          setTimeout(() => setAssignWarning(null), 6000);
+        }}
+      />
 
       <ul className="mt-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredTasks?.map((task) => {
@@ -232,7 +239,6 @@ function Dashboard() {
                 </p>
               )}
 
-              {/* STATUS */}
               <select
                 value={task.status}
                 onChange={(e) =>
@@ -251,7 +257,6 @@ function Dashboard() {
                 <option value="COMPLETED">Completed</option>
               </select>
 
-              {/* ASSIGNEE */}
               <input
                 list={`users-${task.id}`}
                 value={
@@ -279,10 +284,12 @@ function Dashboard() {
                       taskId: task.id,
                       data: { assignedToId: found.id },
                     });
+
                     setAssignWarning({
                       email: found.email,
                       password: found.password,
                     });
+
                     setTimeout(
                       () => setAssignWarning(null),
                       6000
