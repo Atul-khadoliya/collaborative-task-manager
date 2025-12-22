@@ -12,8 +12,9 @@ export const createTask = async (data: {
   creatorId: string;
   assignedToId: string;
 }) => {
-  await prisma.user.findUniqueOrThrow({ where: { id: data.creatorId } });
-  await prisma.user.findUniqueOrThrow({ where: { id: data.assignedToId } });
+  console.log("CREATOR ID:", data.creatorId);
+console.log("ASSIGNEE ID:", data.assignedToId);
+
 
   return prisma.task.create({
     data,
