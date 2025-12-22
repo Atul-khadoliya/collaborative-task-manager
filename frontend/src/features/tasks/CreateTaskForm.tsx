@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTask } from "./task.api";
 
-
-/* 🔧 SAME TEST USERS */
+/* 🔧 SAME TEST USERS (DEMO ONLY) */
 const TEST_USERS = [
   {
     id: "b638c3dd-c885-4814-96b0-f561344eee38",
@@ -32,6 +31,10 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] =
+    useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">("MEDIUM");
+  const [status, setStatus] =
+    useState<"TODO" | "IN_PROGRESS" | "REVIEW" | "COMPLETED">("TODO");
   const [assignedToId, setAssignedToId] = useState("");
 
   const mutation = useMutation({
@@ -48,10 +51,12 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
         onAssignedToTestUser(found.email, found.password);
       }
 
-      // reset
+      // reset form
       setTitle("");
       setDescription("");
       setDueDate("");
+      setPriority("MEDIUM");
+      setStatus("TODO");
       setAssignedToId("");
     },
   });
@@ -64,8 +69,8 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
           title,
           description,
           dueDate,
-          priority: "MEDIUM",
-          status: "TODO",
+          priority,
+          status,
           assignedToId,
         });
       }}
@@ -95,6 +100,32 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
         className="mb-3 w-full border rounded px-3 py-2"
         required
       />
+
+      <select
+        value={priority}
+        onChange={(e) =>
+          setPriority(e.target.value as typeof priority)
+        }
+        className="mb-3 w-full border rounded px-3 py-2"
+      >
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+        <option value="URGENT">Urgent</option>
+      </select>
+
+      <select
+        value={status}
+        onChange={(e) =>
+          setStatus(e.target.value as typeof status)
+        }
+        className="mb-3 w-full border rounded px-3 py-2"
+      >
+        <option value="TODO">Todo</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="REVIEW">Review</option>
+        <option value="COMPLETED">Completed</option>
+      </select>
 
       <select
         value={assignedToId}
