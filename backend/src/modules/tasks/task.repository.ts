@@ -1,4 +1,4 @@
-import {TaskPriority, TaskStatus } from "@prisma/client";
+import { TaskPriority, TaskStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 
@@ -12,6 +12,9 @@ export const createTask = async (data: {
   creatorId: string;
   assignedToId: string;
 }) => {
+  await prisma.user.findUniqueOrThrow({ where: { id: data.creatorId } });
+  await prisma.user.findUniqueOrThrow({ where: { id: data.assignedToId } });
+
   return prisma.task.create({
     data,
   });
