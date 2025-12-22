@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,11 +8,26 @@ import { getTasks, type Task, updateTask } from "./task.api";
 import CreateTaskForm from "./CreateTaskForm";
 import { getUserIdFromToken } from "../../lib/jwt";
 
-/* 🔧 TEMP TEST USERS */
+/* 🔧 TEMP TEST USERS (DEMO ONLY) */
 const TEST_USERS = [
-  { id: "11111111-1111-1111-1111-111111111111", name: "Alice (Test)" },
-  { id: "22222222-2222-2222-2222-222222222222", name: "Bob (Test)" },
-  { id: "33333333-3333-3333-3333-333333333333", name: "Charlie (Test)" },
+  {
+    id: "b638c3dd-c885-4814-96b0-f561344eee38",
+    name: "Alice (Test)",
+    email: "alice@gmail.com",
+    password: "123456",
+  },
+  {
+    id: "cfa75c7b-ef24-4042-9657-5c1b01dd982d",
+    name: "Bob (Test)",
+    email: "bob@gmail.com",
+    password: "123456",
+  },
+  {
+    id: "431e33af-22de-4794-8be6-9e1d7142d3ad",
+    name: "Charlie (Test)",
+    email: "charlie@gmail.com",
+    password: "123456",
+  },
 ];
 
 function formatDate(dateString: string) {
@@ -29,6 +45,12 @@ function isOverdue(dueDate: string) {
 function Dashboard() {
   const queryClient = useQueryClient();
   const userId = getUserIdFromToken();
+
+  // ⚠️ DEMO WARNING STATE
+  const [assignWarning, setAssignWarning] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["tasks"],
@@ -52,11 +74,30 @@ function Dashboard() {
     return <div className="p-10 text-center">Loading tasks…</div>;
 
   if (isError)
-    return <div className="p-10 text-center text-red-600">Failed to load</div>;
+    return (
+      <div className="p-10 text-center text-red-600">
+        Failed to load tasks
+      </div>
+    );
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
-      <h1 className="text-4xl font-bold mb-8">Dashboard</h1>
+      <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
+
+      {/* ⚠️ DEMO WARNING BANNER */}
+      {assignWarning && (
+        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+          <strong>Demo User Assigned.</strong>
+          <div className="mt-1">
+            Log in with:
+            <div className="mt-1 font-mono">
+              📧 {assignWarning.email} <br />
+              🔑 {assignWarning.password}
+            </div>
+            to check notifications.
+          </div>
+        </div>
+      )}
 
       <CreateTaskForm />
 
@@ -91,7 +132,9 @@ function Dashboard() {
                   onChange={(e) =>
                     updateMutation.mutate({
                       taskId: task.id,
-                      data: { status: e.target.value as Task["status"] },
+                      data: {
+                        status: e.target.value as Task["status"],
+                      },
                     })
                   }
                   className="mt-1 w-full border rounded px-2 py-1 text-sm"
@@ -113,7 +156,9 @@ function Dashboard() {
                   onChange={(e) =>
                     updateMutation.mutate({
                       taskId: task.id,
-                      data: { priority: e.target.value as Task["priority"] },
+                      data: {
+                        priority: e.target.value as Task["priority"],
+                      },
                     })
                   }
                   className="mt-1 w-full border rounded px-2 py-1 text-sm"
@@ -136,8 +181,9 @@ function Dashboard() {
                   defaultValue={
                     isAssignedToMe
                       ? "Me"
-                      : TEST_USERS.find((u) => u.id === task.assignedToId)
-                          ?.name || ""
+                      : TEST_USERS.find(
+                          (u) => u.id === task.assignedToId
+                        )?.name || ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;
@@ -160,6 +206,17 @@ function Dashboard() {
                         taskId: task.id,
                         data: { assignedToId: found.id },
                       });
+
+                      // ⚠️ SHOW DEMO WARNING
+                      setAssignWarning({
+                        email: found.email,
+                        password: found.password,
+                      });
+
+                      setTimeout(
+                        () => setAssignWarning(null),
+                        6000
+                      );
                     }
                   }}
                   className="mt-1 w-full border rounded px-2 py-1 text-sm"
