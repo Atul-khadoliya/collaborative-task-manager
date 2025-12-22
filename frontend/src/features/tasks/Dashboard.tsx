@@ -49,7 +49,7 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const userId = getUserIdFromToken();
 
-  /* 🔍 VIEW / FILTER / SORT */
+  /* 🔍 VIEW / FILTER / SORT STATE */
   const [view, setView] = useState<ViewMode>("ASSIGNED");
   const [statusFilter, setStatusFilter] =
     useState<"ALL" | Task["status"]>("ALL");
@@ -64,7 +64,7 @@ function Dashboard() {
     password: string;
   } | null>(null);
 
-  /* 🔑 ASSIGNEE INPUT STATE */
+  /* 🔑 CONTROLLED INPUT */
   const [assigneeInput, setAssigneeInput] = useState<
     Record<string, string>
   >({});
@@ -99,7 +99,7 @@ function Dashboard() {
       </div>
     );
 
-  /* 🔎 VIEW + FILTER + SORT */
+  /* 🔎 APPLY VIEW + FILTERS + SORT */
   const filteredTasks = data
     ?.filter((task) => {
       if (!userId) return false;
@@ -141,18 +141,6 @@ function Dashboard() {
     <div className="max-w-7xl mx-auto px-6 py-10">
       <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
 
-      {/* ⚠️ DEMO WARNING BANNER */}
-      {assignWarning && (
-        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm">
-          <strong>Demo user assigned.</strong>
-          <div className="mt-1 font-mono">
-            📧 {assignWarning.email}
-            <br />
-            🔑 {assignWarning.password}
-          </div>
-        </div>
-      )}
-
       {/* 🔀 VIEW TABS */}
       <div className="mb-4 flex gap-2">
         {(["ASSIGNED", "CREATED", "OVERDUE"] as ViewMode[]).map(
@@ -160,11 +148,10 @@ function Dashboard() {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-4 py-2 rounded text-sm font-medium ${
-                view === v
+              className={`px-4 py-2 rounded text-sm font-medium ${view === v
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-100 text-gray-700"
-              }`}
+                }`}
             >
               {v}
             </button>
@@ -214,13 +201,24 @@ function Dashboard() {
         </select>
       </div>
 
-      {/* ✅ CREATE TASK (CONNECTED TO WARNING) */}
+      {/* ⚠️ DEMO WARNING */}
+      {assignWarning && (
+        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm">
+          <strong>Demo user assigned.</strong>
+          <div className="mt-1 font-mono">
+            📧 {assignWarning.email} <br />
+            🔑 {assignWarning.password}
+          </div>
+        </div>
+      )}
+
       <CreateTaskForm
         onAssignedToTestUser={(email, password) => {
           setAssignWarning({ email, password });
           setTimeout(() => setAssignWarning(null), 6000);
         }}
       />
+
 
       <ul className="mt-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredTasks?.map((task) => {
@@ -239,6 +237,7 @@ function Dashboard() {
                 </p>
               )}
 
+              {/* STATUS */}
               <select
                 value={task.status}
                 onChange={(e) =>
@@ -257,6 +256,7 @@ function Dashboard() {
                 <option value="COMPLETED">Completed</option>
               </select>
 
+              {/* ASSIGNEE */}
               <input
                 list={`users-${task.id}`}
                 value={
@@ -264,8 +264,8 @@ function Dashboard() {
                   (isAssignedToMe
                     ? "Me"
                     : TEST_USERS.find(
-                        (u) => u.id === task.assignedToId
-                      )?.name || "")
+                      (u) => u.id === task.assignedToId
+                    )?.name || "")
                 }
                 onChange={(e) => {
                   const value = e.target.value;
@@ -284,12 +284,10 @@ function Dashboard() {
                       taskId: task.id,
                       data: { assignedToId: found.id },
                     });
-
                     setAssignWarning({
                       email: found.email,
                       password: found.password,
                     });
-
                     setTimeout(
                       () => setAssignWarning(null),
                       6000
