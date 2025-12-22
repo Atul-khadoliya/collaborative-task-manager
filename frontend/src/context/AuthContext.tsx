@@ -3,6 +3,7 @@ import { connectSocket, disconnectSocket } from "../lib/socket";
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isAuthReady: boolean; // ✅ NEW
   login: (token: string) => void;
   logout: () => void;
 }
@@ -11,14 +12,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false); // ✅ NEW
 
-  // Bootstrap on refresh
+  // 🔑 Bootstrap auth on refresh
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     if (token) {
       setIsAuthenticated(true);
       connectSocket(token);
     }
+
+    setIsAuthReady(true); // ✅ mark auth as resolved
   }, []);
 
   const login = (token: string) => {
@@ -34,7 +39,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isAuthReady,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
