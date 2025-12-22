@@ -30,6 +30,9 @@ const TEST_USERS = [
   },
 ];
 
+type ViewMode = "ASSIGNED" | "CREATED" | "OVERDUE";
+type SortOrder = "ASC" | "DESC";
+
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString(undefined, {
     year: "numeric",
@@ -46,11 +49,25 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const userId = getUserIdFromToken();
 
-  // ⚠️ DEMO WARNING STATE
+  /* 🔍 VIEW / FILTER / SORT STATE */
+  const [view, setView] = useState<ViewMode>("ASSIGNED");
+  const [statusFilter, setStatusFilter] =
+    useState<"ALL" | Task["status"]>("ALL");
+  const [priorityFilter, setPriorityFilter] =
+    useState<"ALL" | Task["priority"]>("ALL");
+  const [sortOrder, setSortOrder] =
+    useState<SortOrder>("ASC");
+
+  /* ⚠️ DEMO WARNING */
   const [assignWarning, setAssignWarning] = useState<{
     email: string;
     password: string;
   } | null>(null);
+
+  /* 🔑 CONTROLLED INPUT */
+  const [assigneeInput, setAssigneeInput] = useState<
+    Record<string, string>
+  >({});
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["tasks"],
@@ -63,7 +80,9 @@ function Dashboard() {
       data,
     }: {
       taskId: string;
-      data: Partial<Pick<Task, "status" | "priority" | "assignedToId">>;
+      data: Partial<
+        Pick<Task, "status" | "priority" | "assignedToId">
+      >;
     }) => updateTask(taskId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -80,21 +99,116 @@ function Dashboard() {
       </div>
     );
 
+  /* 🔎 APPLY VIEW + FILTERS + SORT */
+  const filteredTasks = data
+    ?.filter((task) => {
+      if (!userId) return false;
+
+      if (view === "ASSIGNED" && task.assignedToId !== userId)
+        return false;
+
+      if (view === "CREATED" && task.creatorId !== userId)
+        return false;
+
+      if (
+        view === "OVERDUE" &&
+        !(isOverdue(task.dueDate) && task.status !== "COMPLETED")
+      )
+        return false;
+
+      if (
+        statusFilter !== "ALL" &&
+        task.status !== statusFilter
+      )
+        return false;
+
+      if (
+        priorityFilter !== "ALL" &&
+        task.priority !== priorityFilter
+      )
+        return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      const diff =
+        new Date(a.dueDate).getTime() -
+        new Date(b.dueDate).getTime();
+      return sortOrder === "ASC" ? diff : -diff;
+    });
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
       <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
 
-      {/* ⚠️ DEMO WARNING BANNER */}
+      {/* 🔀 VIEW TABS */}
+      <div className="mb-4 flex gap-2">
+        {(["ASSIGNED", "CREATED", "OVERDUE"] as ViewMode[]).map(
+          (v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`px-4 py-2 rounded text-sm font-medium ${
+                view === v
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}
+            >
+              {v}
+            </button>
+          )
+        )}
+      </div>
+
+      {/* 🔍 FILTERS */}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <select
+          value={statusFilter}
+          onChange={(e) =>
+            setStatusFilter(e.target.value as any)
+          }
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="ALL">All Status</option>
+          <option value="TODO">Todo</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="REVIEW">Review</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+
+        <select
+          value={priorityFilter}
+          onChange={(e) =>
+            setPriorityFilter(e.target.value as any)
+          }
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="ALL">All Priority</option>
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+          <option value="URGENT">Urgent</option>
+        </select>
+
+        <select
+          value={sortOrder}
+          onChange={(e) =>
+            setSortOrder(e.target.value as SortOrder)
+          }
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="ASC">Due Date ↑</option>
+          <option value="DESC">Due Date ↓</option>
+        </select>
+      </div>
+
+      {/* ⚠️ DEMO WARNING */}
       {assignWarning && (
-        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
-          <strong>Demo User Assigned.</strong>
-          <div className="mt-1">
-            Log in with:
-            <div className="mt-1 font-mono">
-              📧 {assignWarning.email} <br />
-              🔑 {assignWarning.password}
-            </div>
-            to check notifications.
+        <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm">
+          <strong>Demo user assigned.</strong>
+          <div className="mt-1 font-mono">
+            📧 {assignWarning.email} <br />
+            🔑 {assignWarning.password}
           </div>
         </div>
       )}
@@ -102,17 +216,13 @@ function Dashboard() {
       <CreateTaskForm />
 
       <ul className="mt-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {data?.map((task) => {
+        {filteredTasks?.map((task) => {
           const isAssignedToMe = task.assignedToId === userId;
 
           return (
             <li
               key={task.id}
-              className={`bg-white rounded-2xl border p-6 shadow-sm ${
-                isOverdue(task.dueDate) && task.status !== "COMPLETED"
-                  ? "border-red-300"
-                  : "border-gray-200"
-              }`}
+              className="bg-white rounded-2xl border p-6 shadow-sm"
             >
               <h2 className="text-lg font-semibold">{task.title}</h2>
 
@@ -123,112 +233,71 @@ function Dashboard() {
               )}
 
               {/* STATUS */}
-              <div className="mt-4">
-                <label className="text-xs font-semibold text-gray-500">
-                  Status
-                </label>
-                <select
-                  value={task.status}
-                  onChange={(e) =>
-                    updateMutation.mutate({
-                      taskId: task.id,
-                      data: {
-                        status: e.target.value as Task["status"],
-                      },
-                    })
-                  }
-                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
-                >
-                  <option value="TODO">Todo</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="REVIEW">Review</option>
-                  <option value="COMPLETED">Completed</option>
-                </select>
-              </div>
-
-              {/* PRIORITY */}
-              <div className="mt-3">
-                <label className="text-xs font-semibold text-gray-500">
-                  Priority
-                </label>
-                <select
-                  value={task.priority}
-                  onChange={(e) =>
-                    updateMutation.mutate({
-                      taskId: task.id,
-                      data: {
-                        priority: e.target.value as Task["priority"],
-                      },
-                    })
-                  }
-                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
-                >
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                  <option value="URGENT">Urgent</option>
-                </select>
-              </div>
+              <select
+                value={task.status}
+                onChange={(e) =>
+                  updateMutation.mutate({
+                    taskId: task.id,
+                    data: {
+                      status: e.target.value as Task["status"],
+                    },
+                  })
+                }
+                className="mt-4 w-full border rounded px-2 py-1 text-sm"
+              >
+                <option value="TODO">Todo</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="REVIEW">Review</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
 
               {/* ASSIGNEE */}
-              <div className="mt-3">
-                <label className="text-xs font-semibold text-gray-500">
-                  Assignee
-                </label>
+              <input
+                list={`users-${task.id}`}
+                value={
+                  assigneeInput[task.id] ??
+                  (isAssignedToMe
+                    ? "Me"
+                    : TEST_USERS.find(
+                        (u) => u.id === task.assignedToId
+                      )?.name || "")
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setAssigneeInput((p) => ({
+                    ...p,
+                    [task.id]: value,
+                  }));
 
-                <input
-                  list={`users-${task.id}`}
-                  defaultValue={
-                    isAssignedToMe
-                      ? "Me"
-                      : TEST_USERS.find(
-                          (u) => u.id === task.assignedToId
-                        )?.name || ""
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
+                  const found = TEST_USERS.find(
+                    (u) =>
+                      u.name.toLowerCase() === value.toLowerCase()
+                  );
 
-                    if (value === "Me" && userId) {
-                      updateMutation.mutate({
-                        taskId: task.id,
-                        data: { assignedToId: userId },
-                      });
-                      return;
-                    }
-
-                    const found = TEST_USERS.find(
-                      (u) =>
-                        u.name.toLowerCase() === value.toLowerCase()
+                  if (found) {
+                    updateMutation.mutate({
+                      taskId: task.id,
+                      data: { assignedToId: found.id },
+                    });
+                    setAssignWarning({
+                      email: found.email,
+                      password: found.password,
+                    });
+                    setTimeout(
+                      () => setAssignWarning(null),
+                      6000
                     );
+                  }
+                }}
+                className="mt-3 w-full border rounded px-2 py-1 text-sm"
+              />
 
-                    if (found) {
-                      updateMutation.mutate({
-                        taskId: task.id,
-                        data: { assignedToId: found.id },
-                      });
-
-                      // ⚠️ SHOW DEMO WARNING
-                      setAssignWarning({
-                        email: found.email,
-                        password: found.password,
-                      });
-
-                      setTimeout(
-                        () => setAssignWarning(null),
-                        6000
-                      );
-                    }
-                  }}
-                  className="mt-1 w-full border rounded px-2 py-1 text-sm"
-                />
-
-                <datalist id={`users-${task.id}`}>
-                  <option value="Me" />
-                  {TEST_USERS.map((u) => (
-                    <option key={u.id} value={u.name} />
-                  ))}
-                </datalist>
-              </div>
+              <datalist id={`users-${task.id}`}>
+                <option value="Me" />
+                {TEST_USERS.map((u) => (
+                  <option key={u.id} value={u.name} />
+                ))}
+              </datalist>
 
               <div className="mt-4 text-xs text-gray-500">
                 Due · {formatDate(task.dueDate)}
