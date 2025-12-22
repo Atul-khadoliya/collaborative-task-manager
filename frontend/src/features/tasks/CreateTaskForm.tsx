@@ -41,9 +41,11 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
     useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">("MEDIUM");
   const [dueDate, setDueDate] = useState("");
 
+  // 🔑 ASSIGNEE STATE
   const [assigneeName, setAssigneeName] = useState("");
   const [assignedToId, setAssignedToId] = useState("");
 
+  /* default assign → self */
   useEffect(() => {
     if (currentUserId) {
       setAssigneeName("Me");
@@ -52,18 +54,24 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
   }, [currentUserId]);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      createTask({
+    mutationFn: () => {
+      if (!assignedToId) {
+        throw new Error("Please select a valid assignee");
+      }
+
+      return createTask({
         title,
         description,
         dueDate: new Date(dueDate).toISOString(),
         priority,
         status,
         assignedToId,
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
+      // ⚠️ DEMO WARNING
       const testUser = TEST_USERS.find(
         (u) => u.id === assignedToId
       );
@@ -72,6 +80,7 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
         onAssignedToTestUser(testUser.email, testUser.password);
       }
 
+      // reset
       setTitle("");
       setDescription("");
       setStatus("TODO");
@@ -147,19 +156,33 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
         </select>
       </div>
 
-      <input
-        list="users"
-        value={assigneeName}
-        onChange={(e) => handleAssigneeChange(e.target.value)}
-        className="border px-3 py-2 rounded w-full"
-      />
+      {/* ✅ TYPE + DROPDOWN ASSIGNEE (FIXED) */}
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Assign to
+        </label>
 
-      <datalist id="users">
-        <option value="Me" />
-        {TEST_USERS.map((u) => (
-          <option key={u.id} value={u.name} />
-        ))}
-      </datalist>
+        <input
+          list="users"
+          placeholder="Me, Alice, Bob, Charlie…"
+          value={assigneeName}
+          onFocus={() => {
+            // 🔑 allow dropdown to open when default is "Me"
+            if (assigneeName === "Me") {
+              setAssigneeName("");
+            }
+          }}
+          onChange={(e) => handleAssigneeChange(e.target.value)}
+          className="border px-3 py-2 rounded w-full"
+        />
+
+        <datalist id="users">
+          <option value="Me" />
+          {TEST_USERS.map((u) => (
+            <option key={u.id} value={u.name} />
+          ))}
+        </datalist>
+      </div>
 
       <input
         type="date"
@@ -172,7 +195,7 @@ function CreateTaskForm({ onAssignedToTestUser }: CreateTaskFormProps) {
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="bg-indigo-600 text-white px-4 py-2 rounded"
+        className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50"
       >
         {mutation.isPending ? "Creating..." : "Create Task"}
       </button>
