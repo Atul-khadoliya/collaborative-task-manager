@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { login } from "./auth.api";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const mutation = useMutation({
     mutationFn: () => login(email, password),
     onSuccess: (data) => {
       localStorage.setItem("token", data.token);
       alert("Login successful");
+      navigate("/dashboard");
     },
     onError: (error: any) => {
       alert(error.message);
