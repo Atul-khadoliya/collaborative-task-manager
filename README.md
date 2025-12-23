@@ -63,3 +63,5 @@ A full-stack collaborative task management application with real-time updates, b
 ```bash
 cd backend
 npm install
+
+###2️⃣ Environment Variables
