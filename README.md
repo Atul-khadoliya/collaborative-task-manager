@@ -47,14 +47,10 @@ A full-stack collaborative task management application with real-time updates, b
 
 ---
 
-## ⚙️ Setup Instructions (Run Locally)
-
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/your-username/collaborative-task-manager.git
-cd collaborative-task-manager
+## ⚙️ Setup Instructions (Run Locally
 
 ## ⚙️ Backend Setup (Local)
+
 ### Requirements
 - Node.js (v18+)
 - npm
@@ -63,44 +59,7 @@ cd collaborative-task-manager
 
 ---
 
-## 1️⃣ Clone & Install
+### 1️⃣ Clone & Install
 ```bash
 cd backend
 npm install
-
-##2️⃣ Environment Variables
-
-Create a .env file inside backend/:
-
-DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>?sslmode=require
-JWT_SECRET=your-secret-key
-PORT=5000
-
-##3️⃣ Prisma Setup
-
--Generate Prisma Client:
-
-npx prisma generate
-
-
--Run migrations:
-
-npx prisma migrate dev
-
-##4️⃣ Start Backend Server
-npm run dev
-
-
-Server runs on:
-
-http://localhost:5000
-##5️⃣ Verify Backend
-
-Health check:
-
-GET /health
-
-
-Expected response:
-
-{ "status": "ok" }
