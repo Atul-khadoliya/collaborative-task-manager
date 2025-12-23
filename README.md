@@ -47,170 +47,34 @@ A full-stack collaborative task management application with real-time updates, b
 
 ---
 
-## 📦 Project Structure
+## ⚙️ Setup Instructions (Run Locally)
 
-backend/
-├─ src/
-│ ├─ modules/
-│ │ ├─ auth/
-│ │ ├─ tasks/
-│ │ ├─ notifications/
-│ ├─ lib/
-│ ├─ server.ts
-│
-├─ prisma/
-│ └─ schema.prisma
-│
-└─ package.json
-
-frontend/
-├─ src/
-│ ├─ features/
-│ │ ├─ tasks/
-│ │ ├─ auth/
-│ │ ├─ notifications/
-│ ├─ context/
-│ ├─ lib/
-│ └─ App.tsx
-│
-└─ package.json
-
-yaml
-Copy code
-
----
-
-## ⚙️ Setup Instructions
-
-### 1️⃣ Clone the repository
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/your-username/collaborative-task-manager.git
 cd collaborative-task-manager
-2️⃣ Backend Setup
-bash
-Copy code
+
+###2️⃣ Backend Setup
 cd backend
 npm install
-Create a .env file:
 
-env
-Copy code
+
+Create a .env file inside the backend directory:
+
 DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<db>?sslmode=require
-JWT_SECRET=your-secret-key
-Run Prisma & start server:
+JWT_SECRET=your-jwt-secret
 
-bash
-Copy code
+
+Generate Prisma client and run migrations:
+
 npx prisma generate
 npx prisma migrate dev
+
+
+Start the backend server:
+
 npm run dev
-Backend runs on:
+
+
+Backend will run on:
 👉 http://localhost:5000
-
-3️⃣ Frontend Setup
-bash
-Copy code
-cd ../frontend
-npm install
-npm run dev
-Frontend runs on:
-👉 http://localhost:5173
-
-🔌 API Contract (Key Endpoints)
-Authentication
-Method	Endpoint	Description
-POST	/api/auth/register	Register a new user
-POST	/api/auth/login	Login and receive JWT
-
-Tasks
-Method	Endpoint	Description
-GET	/api/tasks	Fetch tasks relevant to current user
-POST	/api/tasks	Create a new task
-PATCH	/api/tasks/:id	Update task (status, priority, assignment)
-DELETE	/api/tasks/:id	Delete task
-
-Notifications
-Method	Endpoint	Description
-GET	/api/notifications	Fetch unread notifications
-PATCH	/api/notifications/:id/read	Mark notification as read
-
-🧠 Architecture Overview & Design Decisions
-Backend Architecture
-Layered design:
-
-Controller → Service → Repository
-
-Business logic lives in services, not controllers
-
-Prisma handles all DB interactions
-
-DTOs + schema validation ensure safe inputs
-
-Database Choice
-PostgreSQL
-
-Strong relational guarantees
-
-Suitable for task-user relationships
-
-Works well with Prisma migrations
-
-Authentication
-Stateless JWT-based authentication
-
-Token parsed via middleware
-
-User context injected into request lifecycle
-
-🔔 Real-time Functionality (Socket.io)
-Socket.io is initialized on the backend server
-
-Each user joins a room based on userId
-
-Events emitted on:
-
-Task assignment
-
-Task updates
-
-Frontend listens and:
-
-Updates notification state instantly
-
-Invalidates React Query cache for live task refresh
-
-This avoids polling and ensures low-latency updates.
-
-⚖️ Trade-offs & Assumptions
-Task update notifications are currently delivered via sockets only (not persisted yet) to avoid premature schema complexity
-
-Notification persistence is designed but intentionally deferred
-
-Authorization assumes task creator or assignee can update a task
-
-Designed for clarity & correctness over premature optimization
-
-✅ Why This Project Matters
-This project demonstrates:
-
-Clean backend architecture
-
-Real-time systems thinking
-
-Correct use of ORM + transactions
-
-Frontend state management at scale
-
-Practical trade-offs made intentionally
-
-📌 Future Improvements
-Persist all notification types
-
-Role-based access control
-
-Task comments & activity logs
-
-Pagination & infinite scroll
-
-E2E testing
-
