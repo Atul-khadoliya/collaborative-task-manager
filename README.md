@@ -63,12 +63,12 @@ cd collaborative-task-manager
 
 ---
 
-### 1️⃣ Clone & Install
+## 1️⃣ Clone & Install
 ```bash
 cd backend
 npm install
 
-###2️⃣ Environment Variables
+##2️⃣ Environment Variables
 
 Create a .env file inside backend/:
 
@@ -76,7 +76,7 @@ DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>?sslmode
 JWT_SECRET=your-secret-key
 PORT=5000
 
-###3️⃣ Prisma Setup
+##3️⃣ Prisma Setup
 
 -Generate Prisma Client:
 
@@ -87,14 +87,14 @@ npx prisma generate
 
 npx prisma migrate dev
 
-###4️⃣ Start Backend Server
+##4️⃣ Start Backend Server
 npm run dev
 
 
 Server runs on:
 
 http://localhost:5000
-###5️⃣ Verify Backend
+##5️⃣ Verify Backend
 
 Health check:
 
