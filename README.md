@@ -65,6 +65,8 @@ cd backend
 npm install
 
 ###2️⃣ Environment Variables
+
+
 Create a .env file inside backend/:
 
 DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>?sslmode=require
