@@ -73,6 +73,7 @@ DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>?sslmode
 JWT_SECRET=your-secret-key
 PORT=5000
 
+
 3️⃣ Prisma Setup
 
 Generate Prisma Client:
