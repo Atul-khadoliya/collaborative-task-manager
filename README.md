@@ -124,17 +124,26 @@ This ensures both REST APIs and socket events are user-aware.
 📡 API CONTRACT (BACKEND)
 
 AUTH
+
 POST   /api/v1/auth/register   → Register user
+
 POST   /api/v1/auth/login      → Login user
 
+
 TASKS
+
 POST     /api/v1/tasks         → Create task
+
 GET      /api/v1/tasks         → Get tasks for user
+
 PATCH    /api/v1/tasks/:id     → Update task
+
 DELETE   /api/v1/tasks/:id     → Delete task
 
 NOTIFICATIONS
+
 GET     /api/v1/notifications          → Fetch notifications
+
 PATCH   /api/v1/notifications/:id/read → Mark as read
 
 =====================================================================
@@ -176,22 +185,31 @@ How REST APIs & Socket.io Work Together
 Example: Task Assignment
 
 Client (REST API)
+
 POST /api/v1/tasks
 
 Backend
+
 - Task is created in DB
+- 
 - Notification is stored in DB
+- 
 - Socket event is emitted to assignee
 
 emitToUser(userId, "task:assigned", {
+
   taskId,
+  
   title
+  
 });
 
 Client (Socket Listener)
 
 socket.on("task:assigned", (payload) => {
+
   addNotification(payload);
+  
 });
 
 Result:
@@ -202,6 +220,7 @@ User receives notification instantly without page refresh.
 Socket Events Used
 
 task:assigned  → Task assigned to a user
+
 task:updated   → Task status or priority updated
 
 ---------------------------------------------------------------------
@@ -213,8 +232,11 @@ Secure Socket Connections
 - Server maps userId → socketId
 
 socket.on("connection", (socket) => {
+
   const userId = socket.user.id;
+  
   userSockets.set(userId, socket.id);
+  
 });
 
 =====================================================================
