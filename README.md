@@ -1,13 +1,13 @@
 # 🧩 Collaborative Task Manager
 
-A full-stack collaborative task management system with real-time updates using **REST APIs + Socket.io**.  
+A full-stack collaborative task management system with real-time updates using REST APIs + Socket.io.
 Users can create tasks, assign them to others, update status/priority, and receive live notifications without refreshing the page.
 
----
+=====================================================================
 
-## 🛠️ Tech Stack
+🛠️ TECH STACK
 
-### Backend
+Backend
 - Node.js + TypeScript
 - Express.js
 - PostgreSQL
@@ -15,303 +15,243 @@ Users can create tasks, assign them to others, update status/priority, and recei
 - JWT Authentication
 - Socket.io (real-time events)
 
-### Frontend
+Frontend
 - React + TypeScript
 - React Query
 - Tailwind CSS
 - Socket.io Client
 
----
+=====================================================================
 
-# ⚙️ Backend Setup (Local)
+⚙️ BACKEND SETUP (LOCAL)
 
-## Requirements
+Requirements
 - Node.js (v18+)
 - npm
 - PostgreSQL (local or cloud)
 - Git
 
----
+---------------------------------------------------------------------
 
-## 1️⃣ Install Dependencies
-```bash
+1️⃣ Install Dependencies
+
 cd backend
 npm install
+
+---------------------------------------------------------------------
+
 2️⃣ Environment Variables
-Create a .env file inside backend/:
+
+Create a .env file inside backend/
+
 DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>?sslmode=require
 JWT_SECRET=your-secret-key
 PORT=5000
 
+---------------------------------------------------------------------
 
 3️⃣ Prisma Setup
-Generate Prisma client:
+
+Generate Prisma client
+
 npx prisma generate
 
-Run migrations:
+Run migrations
+
 npx prisma migrate dev
 
+---------------------------------------------------------------------
 
 4️⃣ Start Backend Server
+
 npm run dev
 
 Backend runs on:
 http://localhost:5000
 
+---------------------------------------------------------------------
 
 5️⃣ Health Check
+
 GET /health
 
 Response:
 { "status": "ok" }
 
+=====================================================================
 
-🎨 Frontend Setup (Local)
+🎨 FRONTEND SETUP (LOCAL)
+
+---------------------------------------------------------------------
+
 1️⃣ Install Dependencies
+
 cd frontend
 npm install
 
+---------------------------------------------------------------------
 
 2️⃣ Environment Variables
-Create .env inside frontend/:
+
+Create a .env file inside frontend/
+
 VITE_API_BASE_URL=http://localhost:5000
 VITE_SOCKET_URL=http://localhost:5000
 
+---------------------------------------------------------------------
 
 3️⃣ Start Frontend
+
 npm run dev
 
 Frontend runs on:
 http://localhost:5173
 
+=====================================================================
 
-🔐 Authentication Flow
+🔐 AUTHENTICATION FLOW
 
+- Users authenticate via REST APIs using JWT
+- JWT is stored on the client
+- JWT is sent:
+  - In API requests (Authorization header)
+  - During Socket.io connection (handshake)
 
-Users authenticate via REST API using JWT.
+This ensures both REST APIs and socket events are user-aware.
 
+=====================================================================
 
-JWT is stored on the client.
+📡 API CONTRACT (BACKEND)
 
+AUTH
+POST   /api/v1/auth/register   → Register user
+POST   /api/v1/auth/login      → Login user
 
-JWT is sent:
+TASKS
+POST     /api/v1/tasks         → Create task
+GET      /api/v1/tasks         → Get tasks for user
+PATCH    /api/v1/tasks/:id     → Update task
+DELETE   /api/v1/tasks/:id     → Delete task
 
+NOTIFICATIONS
+GET     /api/v1/notifications          → Fetch notifications
+PATCH   /api/v1/notifications/:id/read → Mark as read
 
-In API requests (Authorization header)
+=====================================================================
 
+🧠 ARCHITECTURE & DESIGN DECISIONS
 
-During Socket.io connection (handshake)
-
-
-
-
-This ensures both API calls and socket events are user-aware.
-
-📡 API Contract (Backend)
-Auth
-MethodEndpointDescriptionPOST/api/v1/auth/registerRegister userPOST/api/v1/auth/loginLogin user
-
-Tasks
-MethodEndpointDescriptionPOST/api/v1/tasksCreate taskGET/api/v1/tasksGet tasks for userPATCH/api/v1/tasks/:idUpdate taskDELETE/api/v1/tasks/:idDelete task
-
-Notifications
-MethodEndpointDescriptionGET/api/v1/notificationsFetch notificationsPATCH/api/v1/notifications/:id/readMark as read
-
-🧠 Architecture & Design Decisions
 Why PostgreSQL + Prisma
-
-
-Strong relational integrity (users ↔ tasks ↔ notifications)
-
-
-Prisma gives:
-
-
-Type safety
-
-
-Easy migrations
-
-
-Clean data access layer
-
-
-
-
+- Strong relational integrity (users ↔ tasks ↔ notifications)
+- Prisma provides:
+  - Type safety
+  - Easy migrations
+  - Clean data access layer
 
 Service Layer Pattern
-
-
-Controllers handle HTTP concerns
-
-
-Services handle business logic
-
-
-Repositories handle DB access
-
+- Controllers handle HTTP concerns
+- Services handle business logic
+- Repositories handle database access
 
 This separation keeps the codebase scalable and testable.
 
 JWT Handling
+- JWT issued on login
+- Verified via middleware for protected routes
+- Same JWT reused during socket handshake
 
+=====================================================================
 
-JWT issued on login
+🔔 REAL-TIME SYSTEM (SOCKET.IO)
 
-
-Verified via middleware for all protected routes
-
-
-Same JWT is reused during socket handshake
-
-
-
-🔔 Real-Time System (Socket.io) — Detailed Explanation
 Why Socket.io?
+- REST APIs are request-response
+- Notifications and task updates require instant delivery
+- Socket.io enables server-initiated events
 
+---------------------------------------------------------------------
 
-REST APIs are request-response
+How REST APIs & Socket.io Work Together
 
-
-Notifications and task updates require instant delivery
-
-
-Socket.io enables server-initiated events
-
-
-
-🔄 How REST APIs & Socket.io Work Together
 Example: Task Assignment
 
-
 Client (REST API)
-
-
 POST /api/v1/tasks
 
-
-
-Backend (Service Layer)
-
-
-
-
-Task is created in DB
-
-
-Notification is stored in DB
-
-
-Socket event is emitted to assignee
-
+Backend
+- Task is created in DB
+- Notification is stored in DB
+- Socket event is emitted to assignee
 
 emitToUser(userId, "task:assigned", {
   taskId,
   title
 });
 
-
-
 Client (Socket Listener)
-
 
 socket.on("task:assigned", (payload) => {
   addNotification(payload);
 });
 
-➡️ Result: User receives notification instantly without refresh
+Result:
+User receives notification instantly without page refresh.
 
-📢 Socket Events Used
-EventEmitted Whentask:assignedTask assigned to a usertask:updatedTask status/priority updated
+---------------------------------------------------------------------
 
-🔐 Secure Socket Connections
+Socket Events Used
 
+task:assigned  → Task assigned to a user
+task:updated   → Task status or priority updated
 
-Socket connects only after login
+---------------------------------------------------------------------
 
+Secure Socket Connections
 
-JWT is sent during connection
-
-
-Server maps userId → socketId
-
-
-Events are emitted using emitToUser(userId)
-
+- Socket connects only after login
+- JWT is sent during connection
+- Server maps userId → socketId
 
 socket.on("connection", (socket) => {
   const userId = socket.user.id;
   userSockets.set(userId, socket.id);
 });
 
+=====================================================================
 
-✅ Why Notifications Are Also Stored in DB
+✅ WHY NOTIFICATIONS ARE STORED IN DB
 
+- Socket events are ephemeral
+- Database ensures:
+  - Missed notifications are retrievable
+  - Unread count survives refresh
 
-Socket events are ephemeral
+Frontend fetches notifications on load.
+Socket only handles live updates.
 
+=====================================================================
 
-DB ensures:
+⚖️ TRADE-OFFS & ASSUMPTIONS
 
+- Socket.io used instead of raw WebSockets for:
+  - Auto-reconnection
+  - Event abstraction
+- Notifications are text-based
+- No role-based permissions (can be added later)
+- Demo users used for easier testing
 
-Missed notifications are retrievable
+=====================================================================
 
+🚀 FUTURE IMPROVEMENTS
 
-Unread count survives refresh
+- Read receipts per notification
+- Real-time task comments
+- Pagination for notifications
+- Role-based access (Admin / Member)
 
+=====================================================================
 
+👨‍💻 AUTHOR
 
-
-Frontend fetches notifications on load
-
-
-Socket only handles live updates
-
-
-
-⚖️ Trade-offs & Assumptions
-
-
-Socket.io used instead of WebSockets directly for:
-
-
-Auto reconnection
-
-
-Rooms & event abstraction
-
-
-
-
-Notifications are simple text-based
-
-
-No role-based permissions (can be added later)
-
-
-Demo users used in UI for easier testing
-
-
-
-🚀 Future Improvements
-
-
-Read receipts per notification
-
-
-Task comments (real-time)
-
-
-Pagination for notifications
-
-
-Role-based access (Admin/Member)
-
-
-
-👨‍💻 Author
-Built as a full-stack system focusing on clean architecture, real-time systems, and production-ready patterns.
-
----
-
-
+Built as a production-style full-stack system focusing on clean architecture,
+real-time systems, and scalable backend design.
