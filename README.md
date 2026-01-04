@@ -45,7 +45,9 @@ npm install
 Create a .env file inside backend/
 
 DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>?sslmode=require
+
 JWT_SECRET=your-secret-key
+
 PORT=5000
 
 ---------------------------------------------------------------------
@@ -67,6 +69,7 @@ npx prisma migrate dev
 npm run dev
 
 Backend runs on:
+
 http://localhost:5000
 
 ---------------------------------------------------------------------
@@ -76,6 +79,7 @@ http://localhost:5000
 GET /health
 
 Response:
+
 { "status": "ok" }
 
 =====================================================================
@@ -96,6 +100,7 @@ npm install
 Create a .env file inside frontend/
 
 VITE_API_BASE_URL=http://localhost:5000
+
 VITE_SOCKET_URL=http://localhost:5000
 
 ---------------------------------------------------------------------
@@ -105,6 +110,7 @@ VITE_SOCKET_URL=http://localhost:5000
 npm run dev
 
 Frontend runs on:
+
 http://localhost:5173
 
 =====================================================================
@@ -139,6 +145,7 @@ GET      /api/v1/tasks         → Get tasks for user
 PATCH    /api/v1/tasks/:id     → Update task
 
 DELETE   /api/v1/tasks/:id     → Delete task
+
 
 NOTIFICATIONS
 
@@ -191,18 +198,14 @@ POST /api/v1/tasks
 Backend
 
 - Task is created in DB
-- 
 - Notification is stored in DB
-- 
 - Socket event is emitted to assignee
 
 emitToUser(userId, "task:assigned", {
+   taskId,
+   title
+  });
 
-  taskId,
-  
-  title
-  
-});
 
 Client (Socket Listener)
 
